@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: mysql:latest
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: test_db
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        options: >-
+          --health-cmd="mysqladmin ping --silent" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=3
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Wait for DB to be ready
+      run: |
+        until mysqladmin ping -h "localhost" --silent; do
+          echo "Waiting for database connection..."
+          sleep 2
+        done
+
+    - name: Run Migrations
+      run: npx sequelize-cli db:migrate
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_USER: test_user
+        DATABASE_PASSWORD: test_password
+        DATABASE_NAME: test_db
+
+    - name: Seed Database
+      run: npx sequelize-cli db:seed:all
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_USER: test_user
+        DATABASE_PASSWORD: test_password
+        DATABASE_NAME: test_db
+
+    - name: Run Tests
+      run: npm test
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_USER: test_user
+        DATABASE_PASSWORD: test_password
+        DATABASE_NAME: test_db
