@@ -42,7 +42,7 @@ jobs:
       - name: Wait for MySQL to be available
         run: |
           echo "Waiting for MySQL to start..."
-          sleep 10 # Wait for a few seconds before trying to connect
+          sleep 10 # Give it some time to start
           until mysql --host=127.0.0.1 --port=3306 -u test_user -ptest_password -e "SELECT 1"; do
             echo "Waiting for MySQL to be available..."
             sleep 2
