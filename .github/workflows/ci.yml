@@ -22,6 +22,12 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+        # Add environment variables to initialize MySQL
+        env:
+          MYSQL_ROOT_PASSWORD: test_root_password  # Set a root password
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+          MYSQL_DATABASE: test_db
 
     steps:
     - name: Check out the code
