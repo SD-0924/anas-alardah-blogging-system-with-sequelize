@@ -1,4 +1,4 @@
-name: TEST
+name: CI
 
 on:
   push:
@@ -12,21 +12,23 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-
+    
     services:
       mysql:
         image: mysql:5.7
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: test_db
-        ports:
-          - 3306
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-
+        ports:
+          - 3306
+    
     steps:
     - uses: actions/checkout@v2
     
@@ -38,10 +40,27 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
+    - name: Wait for MySQL
+      run: |
+        until mysql --host 127.0.0.1 --port 3306 -u test_user -ptest_password -e "SELECT 1"; do
+          echo "Waiting for MySQL to be available..."
+          sleep 2
+        done
+    
+    - name: Run migrations
+      env:
+        DB_HOST: 127.0.0.1
+        DB_USER: test_user
+        DB_PASSWORD: test_password
+        DB_NAME: test_db
+      run: |
+        npx sequelize-cli db:migrate
+        npx sequelize-cli db:seed:all
+    
     - name: Run tests
       env:
-        DB_HOST: localhost
-        DB_USER: root
-        DB_PASSWORD: root
+        DB_HOST: 127.0.0.1
+        DB_USER: test_user
+        DB_PASSWORD: test_password
         DB_NAME: test_db
       run: npm test
