@@ -1,6 +1,5 @@
-import type { Config } from '@jest/types';
-
-const config: Config.InitialOptions = {
+/** @type {import('@jest/types').Config.InitialOptions} */
+const config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
@@ -14,8 +13,8 @@ const config: Config.InitialOptions = {
     },
   },
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1', // Ensures that Jest correctly resolves `.ts` imports instead of `.js`
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 };
 
-export default config;
+module.exports = config;
