@@ -1,29 +1,37 @@
-import { Categories } from "../models/categoriesModel.js";
-import { PostsCategories } from "../models/postsCategoriesModel.js";
+import { Request, Response } from 'express';
+import { Categories } from '../models/categoriesModel.js';
+import { PostsCategories } from '../models/postsCategoriesModel.js';
 
-export const createCategoriesTable = async (req, res) => {
+// Define an interface for the category data
+interface CategoryData {
+    description: string;
+    postId: number;
+}
+
+// Create categories table
+export const createCategoriesTable = async (req: Request, res: Response): Promise<void> => {
     try {
         await Categories.sync();
         res.status(200).json({ message: "Categories table created" });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: (error as Error).message });
     }
 };
 
-//Create a new category for a post by ID
-export const createCategory = async (req, res) => {
+// Create a new category for a post by ID
+export const createCategory = async (req: Request<{}, {}, CategoryData>, res: Response): Promise<void> => {
     try {
         const { description, postId } = req.body;
-        const category = await Categories.create({ description, postId }) as any;
+        const category = await Categories.create({ description, postId }) as any; // Adjust type if necessary
         const postCategories = await PostsCategories.create({ postId, categoryId: category.id });
         res.status(201).json({ category, postCategories });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: (error as Error).message });
     }
 };
 
-//Get Categories for a specific post by ID
-export const getCategoriesByPostId = async (req, res) => {
+// Get categories for a specific post by ID
+export const getCategoriesByPostId = async (req: Request<{ postId: string }>, res: Response): Promise<void> => {
     try {
         const { postId } = req.params;
         if (!postId || isNaN(Number(postId))) {
