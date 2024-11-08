@@ -1,5 +1,5 @@
 /** @type {import('@jest/types').Config.InitialOptions} */
-const config = {
+export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
@@ -13,8 +13,6 @@ const config = {
     },
   },
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^(\\.{1,2}/.*)\\.js$': '$1', // Ensures that Jest correctly resolves `.ts` imports instead of `.js`
   },
 };
-
-module.exports = config;
