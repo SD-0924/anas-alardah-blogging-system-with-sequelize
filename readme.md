@@ -100,12 +100,49 @@ Below are some example routes that demonstrate how to interact with the blogging
 **Response**:
 ```json
 {
-    // Post object similar to the one shown in Get All Posts
+    "id": 5,
+    "title": "SQL",
+    "content": "SQL is amazing",
+    "userId": 3,
+    "createdAt": "2024-11-08T09:14:38.000Z",
+    "updatedAt": "2024-11-08T09:14:38.000Z",
+    "user": {
+        "id": 3,
+        "username": "Faris",
+        "email": "faris@gmail.com",
+        "password": "$2b$10$KJ6qxcyNCmNv8RdJo5lXGuFptcmqb/zD0A5XkfIyhuoeHYIXTHkXK",
+        "createdAt": "2024-11-08T09:11:54.000Z",
+        "updatedAt": "2024-11-08T09:11:54.000Z"
+    },
+    "categories": [
+        {
+            "id": 3,
+            "description": "testcategory",
+            "createdAt": "2024-11-08T09:19:58.000Z",
+            "updatedAt": "2024-11-08T09:19:58.000Z",
+            "posts_categories": {
+                "postId": 5,
+                "categoryId": 3,
+                "createdAt": "2024-11-08T09:19:58.000Z",
+                "updatedAt": "2024-11-08T09:19:58.000Z"
+            }
+        },
+    ],
+    "comments": [
+        {
+            "id": 1,
+            "content": "testcontent",
+            "postId": 5,
+            "userId": 3,
+            "createdAt": "2024-11-08T09:17:31.000Z",
+            "updatedAt": "2024-11-08T09:17:31.000Z"
+        },   
+    ]
 }
 ```
 
 ### 4. Update a Post
-- **Endpoint**: `PUT /posts/:id`
+- **Endpoint**: `PUT /posts/updatePost/:id`
 
 **Request Body**:
 ```json
@@ -118,7 +155,12 @@ Below are some example routes that demonstrate how to interact with the blogging
 **Response**:
 ```json
 {
-    // Updated post object...
+    "id": 5,
+    "title": "Updated Post Title",
+    "content": "This is the updated content of the post.",
+    "userId": 3,
+    "createdAt": "2024-11-08T09:14:38.000Z",
+    "updatedAt": "2024-11-08T12:21:30.844Z"
 }
 ```
 
