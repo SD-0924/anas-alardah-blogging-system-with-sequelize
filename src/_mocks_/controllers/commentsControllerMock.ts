@@ -1,6 +1,4 @@
 import { Request, Response } from 'express';
-import { Model } from 'sequelize';
-import { Comments } from '../models/commentsModel.js';
 import Joi from 'joi';
 
 // Define a type for the comment data
@@ -17,17 +15,16 @@ const commentDataSchema = Joi.object({
     userId: Joi.number().required(),
 });
 
-// Create comments table
-export const createCommentsTable = async (req: Request, res: Response): Promise<void> => {
-    try {
-        await Comments.sync({ alter: true });
-        console.log('Comments table created successfully');
-        res.status(200).json({ message: 'Comments table created successfully' });
-    } catch (error) {
-        console.error('Error creating Comments table:', error);
-        res.status(500).json({ error: (error as Error).message });
-    }
-};
+//Mock database for comments
+let comments = [
+    {
+        id: "1",
+        content: "This is the content of the first comment",
+        postId: 1,
+        userId: 1,
+    },
+];
+
 
 // Create a new comment for a post by ID
 export const createComment = async (req: Request<{}, {}, CommentData>, res: Response): Promise<void> => {
@@ -37,8 +34,11 @@ export const createComment = async (req: Request<{}, {}, CommentData>, res: Resp
         if (error) {
             return res.status(400).json({ error: error.message, message: 'Comment content, post ID, and user ID are required' });
         }
-        const comment = await Comments.create({ content, postId, userId });
-        res.status(201).json(comment);
+
+        // Mocking the database insertion
+        const newComment = { id: (comments.length + 1).toString(), content, postId, userId };
+        comments.push(newComment);
+        res.status(201).json(newComment);
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });
     }
@@ -48,14 +48,14 @@ export const createComment = async (req: Request<{}, {}, CommentData>, res: Resp
 export const getCommentsByPostId = async (req: Request<{ postId: string }>, res: Response): Promise<void> => {
     try {
         const { postId } = req.params;
-        const comments = await Comments.findAll({ where: { postId } });
-
-        if (!comments || comments.length === 0) {
+        const commentsForPost = comments.filter(comment => comment.postId === Number(postId));
+        if (!commentsForPost || commentsForPost.length === 0) {
             res.status(404).json({ error: 'No comments found for this post' });
         } else {
-            res.status(200).json(comments);
+            res.status(200).json(commentsForPost);
         }
     } catch (error) {
+        console.error('Error getting comments by post ID:', error);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {

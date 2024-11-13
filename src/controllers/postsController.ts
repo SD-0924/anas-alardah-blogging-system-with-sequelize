@@ -4,6 +4,7 @@ import { Posts } from '../models/postsModel.js';
 import { Users } from '../models/usersModel.js';
 import { Comments } from '../models/commentsModel.js';
 import { Categories } from '../models/categoriesModel.js';
+import Joi from 'joi';
 
 // Define an interface for the post data
 interface PostData {
@@ -11,6 +12,28 @@ interface PostData {
     content: string;
     userId: number;
 }
+
+// Validation schema for post data
+const postDataSchema = Joi.object({
+    title: Joi.string().required(),
+    content: Joi.string().required(),
+    userId: Joi.number().required(),
+});
+
+// Validation schema for post update data
+const updatePostSchema = Joi.object({
+    title: Joi.string(),
+    content: Joi.string(),
+});
+
+//Validation schema for post ID
+const idSchema = Joi.object({
+    id: Joi.string().pattern(/^\d+$/).required().messages({
+        'string.empty': 'Post ID is required',
+        'string.pattern.base': 'Post ID must be a numeric value',
+        'any.required': 'Post ID is required'
+    })
+});
 
 // Create posts table
 export const createPostsTable = async (req: Request, res: Response): Promise<void> => {
@@ -28,6 +51,10 @@ export const createPostsTable = async (req: Request, res: Response): Promise<voi
 export const createPost = async (req: Request<{}, {}, PostData>, res: Response): Promise<void> => {
     try {
         const { title, content, userId } = req.body;
+        const { error } = await postDataSchema.validateAsync({ title, content, userId });
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
         const post = await Posts.create({ title, content, userId });
         res.status(201).json(post);
     } catch (error) {
@@ -64,6 +91,10 @@ export const getAllPosts = async (req: Request, res: Response): Promise<void> =>
 export const getPostById = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
+        const { error } = await idSchema.validateAsync({ id });
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
         const post = await Posts.findByPk(id, {
             include: [
                 { model: Users, as: 'user' },
@@ -89,6 +120,16 @@ export const updatePost = async (req: Request<{ id: string }, {}, Partial<PostDa
         const { id } = req.params;
         const { title, content } = req.body;
 
+        const { error } = await updatePostSchema.validateAsync({ title, content });
+        if (error) {
+            return res.status(400).json({ error: error.message, message: "Post title and content are required" });
+        }
+
+        const { error: idError } = await idSchema.validateAsync({ id });
+        if (idError) {
+            return res.status(400).json({ error: idError.message, message: "Post ID is required" });
+        }
+
         const post = await Posts.findByPk(id) as Model<any, any> & Partial<PostData>;
         
         if (post) {
@@ -108,6 +149,11 @@ export const updatePost = async (req: Request<{ id: string }, {}, Partial<PostDa
 export const deletePost = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
+
+        const { error } = await idSchema.validateAsync({ id });
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
         
         const post = await Posts.findByPk(id);
         

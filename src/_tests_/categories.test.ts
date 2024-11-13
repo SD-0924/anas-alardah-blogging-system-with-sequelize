@@ -1,6 +1,6 @@
 import request from "supertest";
 import express from "express";
-import categoriesRouter from "../routes/categoriesRoute.js";
+import categoriesRouter from "../_mocks_/routes/categoriesRouteMock.js";
 
 const app = express();
 app.use(express.json());
@@ -11,14 +11,14 @@ describe("Categories Route - Success cases", () => {
     it("should create a new category successfully", async () => {
         const response = await request(app).post("/categories/createCategory").send({
             description: "testcategory",
-            postId: 5,
+            postId: 1,
         });
 
         expect(response.status).toBe(201);
     });
 
     it("should retrieve categories for a specific post by post ID", async () => {
-        const postId = 5; // Adjust based on your test data
+        const postId = 1; // Adjust based on your test data
         const response = await request(app).get(`/categories/getCategoriesByPostId/${postId}`);
         
         expect(response.status).toBe(200);

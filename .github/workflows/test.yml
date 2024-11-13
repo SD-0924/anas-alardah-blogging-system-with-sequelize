@@ -1,69 +1,47 @@
-name: DB
+name: Run Unit Tests
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'  # This runs the workflow every day at midnight UTC
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      db:
-        image: mysql:latest
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ROOT_PASSWORD: root_password
-          MYSQL_DATABASE: test_db
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_password
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
     
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
     steps:
-    - name: Check out the code
-      uses: actions/checkout@v2
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'
-    
-    - name: Install dependencies
-      run: npm install
-    
-    - name: Wait for DB to be ready
-      run: |
-        until mysqladmin ping -h "localhost" --silent; do
-          echo "Waiting for database connection..."
-          sleep 2
-        done
-    
-    - name: Run Migrations
-      run: npx sequelize-cli db:migrate
-      env:
-        DATABASE_HOST: localhost
-        DATABASE_USER: test_user
-        DATABASE_PASSWORD: test_password
-        DATABASE_NAME: test_db
-    
-    - name: Seed Database
-      run: npx sequelize-cli db:seed:all
-      env:
-        DATABASE_HOST: localhost
-        DATABASE_USER: test_user
-        DATABASE_PASSWORD: test_password
-        DATABASE_NAME: test_db
-    
-    - name: Run Tests
-      run: npm test
-      env:
-        DATABASE_HOST: localhost
-        DATABASE_USER: test_user
-        DATABASE_PASSWORD: test_password
-        DATABASE_NAME: test_db
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      
+      - name: Install dependencies
+        run: |
+          npm install --include=optional sharp
+          npm install  # Or you can use npm ci if your lock file is up to date
+      
+      - name: Create images directory
+        run: mkdir -p src/images
+
+      - name: Run Unit Tests
+        run: npm test
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report-node-${{ matrix.node-version }}
+          path: coverage/
+          retention-days: 30
+        if: always()

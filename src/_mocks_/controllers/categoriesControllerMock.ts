@@ -1,6 +1,4 @@
 import { Request, Response } from 'express';
-import { Categories } from '../models/categoriesModel.js';
-import { PostsCategories } from '../models/postsCategoriesModel.js';
 import Joi from 'joi';
 
 // Define an interface for the category data
@@ -15,15 +13,14 @@ const categoryDataSchema = Joi.object({
     postId: Joi.number().required(),
 });
 
-// Create categories table
-export const createCategoriesTable = async (req: Request, res: Response): Promise<void> => {
-    try {
-        await Categories.sync();
-        res.status(200).json({ message: "Categories table created" });
-    } catch (error) {
-        res.status(500).json({ error: (error as Error).message });
-    }
-};
+// Mock database for categories
+let categories = [
+    {
+        id: "1",
+        description: "Category 1",
+        postId: 1,
+    },
+];
 
 // Create a new category for a post by ID
 export const createCategory = async (req: Request<{}, {}, CategoryData>, res: Response): Promise<void> => {
@@ -33,8 +30,11 @@ export const createCategory = async (req: Request<{}, {}, CategoryData>, res: Re
         if (error) {
             return res.status(400).json({ error: error.message });
         }
-        const category = await Categories.create({ description, postId }) as any; // Adjust type if necessary
-        const postCategories = await PostsCategories.create({ postId, categoryId: category.id });
+
+        // Mocking the database insertion
+        const category = { id: (categories.length + 1).toString(), description, postId };
+        categories.push(category);
+        const postCategories = { postId, categoryId: category.id };
         res.status(201).json({ category, postCategories });
     } catch (error) {
         res.status(500).json({ error: (error as Error).message });
@@ -49,14 +49,15 @@ export const getCategoriesByPostId = async (req: Request<{ postId: string }>, re
             return res.status(400).json({ error: "Invalid post ID format" });
         }
 
-        const categories = await PostsCategories.findAll({ where: { postId } });
+        const categoriesList = categories.filter(category => category.postId === Number(postId));
 
-        if (!categories || categories.length === 0) {
+        if (!categoriesList || categoriesList.length === 0) {
             return res.status(404).json({ error: "Categories not found" });
         }
 
-        res.status(200).json(categories);
+        res.status(200).json(categoriesList);
     } catch (error) {
+        console.error('Error getting categories by post ID:', error);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
